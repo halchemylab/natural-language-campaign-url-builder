@@ -1,9 +1,7 @@
 import streamlit as st
 import os
-import json
-import urllib.parse
-from openai import OpenAI
 from dotenv import load_dotenv
+from utils import normalize_url, build_campaign_url, generate_campaign_data
 
 # Load environment variables if available
 load_dotenv()
@@ -45,123 +43,6 @@ def get_api_key():
         return env_key
         
     return None
-
-def normalize_url(url):
-    """Ensures URL has a scheme."""
-    if not url:
-        return ""
-    url = url.strip()
-    if not url.startswith(('http://', 'https://')):
-        return f'https://{url}'
-    return url
-
-def build_campaign_url(base_url, source, medium, campaign_name, campaign_id, term, content):
-    """
-    Constructs the final URL.
-    - Preserves existing query params in base_url.
-    - Overwrites existing utm_ params with new values if provided.
-    - Appends new utm_ params.
-    """
-    if not base_url:
-        return ""
-    
-    base_url = normalize_url(base_url)
-    
-    try:
-        parsed_url = urllib.parse.urlparse(base_url)
-    except Exception:
-        return base_url # Return as is if parsing fails
-        
-    # Get existing params
-    query_params = dict(urllib.parse.parse_qsl(parsed_url.query))
-    
-    # New params to merge
-    utm_params = {
-        'utm_source': source,
-        'utm_medium': medium,
-        'utm_campaign': campaign_name,
-        'utm_id': campaign_id,
-        'utm_term': term,
-        'utm_content': content
-    }
-    
-    # Clean up empty new params
-    utm_params = {k: v for k, v in utm_params.items() if v}
-    
-    # Update query params (overwrite collisions with new values)
-    query_params.update(utm_params)
-    
-    # Rebuild query string
-    new_query = urllib.parse.urlencode(query_params, safe='/')
-    
-    # Rebuild full URL
-    final_url = urllib.parse.urlunparse((
-        parsed_url.scheme,
-        parsed_url.netloc,
-        parsed_url.path,
-        parsed_url.params,
-        new_query,
-        parsed_url.fragment
-    ))
-    
-    return final_url
-
-def generate_campaign_data(prompt, api_key, model, temperature):
-    """Calls OpenAI to parse the natural language prompt."""
-    client = OpenAI(api_key=api_key)
-    
-    system_prompt = """
-    You are an expert marketing URL operations assistant. 
-    Convert the user's natural language campaign description into structured UTM parameters.
-    
-    Rules:
-    - website_url: Extract the destination URL. If missing scheme, assume https://.
-    - campaign_source (utm_source): Required. Lowercase.
-    - campaign_medium (utm_medium): Required. Lowercase.
-    - campaign_name (utm_campaign): Required (or campaign_id). Convert spaces to underscores. Keep lowercase unless specified.
-    - campaign_id (utm_id): Optional.
-    - campaign_term (utm_term): Optional.
-    - campaign_content (utm_content): Optional.
-    
-    Return JSON only matching the schema.
-    """
-    
-    try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
-            ],
-            response_format={
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "campaign_parameters",
-                    "strict": True,
-                    "schema": {
-                        "type": "object",
-                        "properties": {
-                            "website_url": {"type": "string"},
-                            "campaign_source": {"type": "string"},
-                            "campaign_medium": {"type": "string"},
-                            "campaign_name": {"type": ["string", "null"]},
-                            "campaign_id": {"type": ["string", "null"]},
-                            "campaign_term": {"type": ["string", "null"]},
-                            "campaign_content": {"type": ["string", "null"]}
-                        },
-                        "required": ["website_url", "campaign_source", "campaign_medium", "campaign_name", "campaign_id", "campaign_term", "campaign_content"],
-                        "additionalProperties": False
-                    }
-                }
-            },
-            temperature=temperature
-        )
-        
-        content = response.choices[0].message.content
-        return json.loads(content)
-    except Exception as e:
-        st.error(f"Error calling OpenAI: {e}")
-        return None
 
 # --- State Management ---
 
