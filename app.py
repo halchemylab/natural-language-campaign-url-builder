@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import qrcode
 import io
+import pyshorteners
 from dotenv import load_dotenv
 from utils import normalize_url, build_campaign_url, generate_campaign_data
 
@@ -232,6 +233,28 @@ if final_url:
                 file_name="campaign_qr.png",
                 mime="image/png"
             )
+
+    # URL Shortener
+    st.divider()
+    if 'shortened_url' not in st.session_state:
+        st.session_state.shortened_url = None
+        
+    # Reset shortened URL if the main URL changes (simple check: if shortened URL doesn't resolve to current final_url - strictly we can't check easily without decoding, 
+    # but we can just clear it if we detect a change in inputs. 
+    # Actually, simpler: just let user click again if they change params.
+    
+    if st.button("Shorten URL (TinyURL)"):
+        with st.spinner("Shortening..."):
+            try:
+                s = pyshorteners.Shortener()
+                short_url = s.tinyurl.short(final_url)
+                st.session_state.shortened_url = short_url
+            except Exception as e:
+                st.error(f"Error shortening URL: {e}")
+
+    if st.session_state.get('shortened_url'):
+        st.success("Short URL generated:")
+        st.code(st.session_state.shortened_url, language="text")
 
 else:
     st.info("Enter details above to generate a URL.")
