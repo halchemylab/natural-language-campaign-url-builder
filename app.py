@@ -1,5 +1,7 @@
 import streamlit as st
 import os
+import qrcode
+import io
 from dotenv import load_dotenv
 from utils import normalize_url, build_campaign_url, generate_campaign_data
 
@@ -202,6 +204,35 @@ st.subheader("Generated URL")
 if final_url:
     st.code(final_url, language="text")
     st.caption("Click the copy icon in the top right of the code box above.")
+    
+    # QR Code Generation
+    with st.expander("Show QR Code"):
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(final_url)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Convert to bytes for display and download
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format='PNG')
+        img_byte_arr = img_byte_arr.getvalue()
+        
+        c1, c2 = st.columns([1, 2])
+        with c1:
+            st.image(img_byte_arr, caption="Campaign QR Code")
+        with c2:
+            st.download_button(
+                label="Download QR Code",
+                data=img_byte_arr,
+                file_name="campaign_qr.png",
+                mime="image/png"
+            )
+
 else:
     st.info("Enter details above to generate a URL.")
 
