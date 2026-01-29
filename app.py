@@ -153,19 +153,22 @@ with st.container():
 
     if generate_btn and nl_prompt:
         with st.spinner("Analyzing campaign details..."):
-            result = generate_campaign_data(nl_prompt, api_key, model_option, temperature)
-            if result:
-                # Update state
-                st.session_state.website_url = result.get('website_url') or ""
-                st.session_state.campaign_source = result.get('campaign_source') or ""
-                st.session_state.campaign_medium = result.get('campaign_medium') or ""
-                st.session_state.campaign_name = result.get('campaign_name') or ""
-                st.session_state.campaign_id = result.get('campaign_id') or ""
-                st.session_state.campaign_term = result.get('campaign_term') or ""
-                st.session_state.campaign_content = result.get('campaign_content') or ""
-                
-                st.session_state.usage_count += 1
-                st.rerun()
+            try:
+                result = generate_campaign_data(nl_prompt, api_key, model_option, temperature)
+                if result:
+                    # Update state
+                    st.session_state.website_url = result.get('website_url') or ""
+                    st.session_state.campaign_source = result.get('campaign_source') or ""
+                    st.session_state.campaign_medium = result.get('campaign_medium') or ""
+                    st.session_state.campaign_name = result.get('campaign_name') or ""
+                    st.session_state.campaign_id = result.get('campaign_id') or ""
+                    st.session_state.campaign_term = result.get('campaign_term') or ""
+                    st.session_state.campaign_content = result.get('campaign_content') or ""
+                    
+                    st.session_state.usage_count += 1
+                    st.rerun()
+            except Exception as e:
+                st.error(f"Error calling OpenAI: {e}")
 
 st.divider()
 

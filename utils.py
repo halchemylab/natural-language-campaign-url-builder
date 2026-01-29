@@ -1,6 +1,5 @@
 import urllib.parse
 import json
-import streamlit as st
 from openai import OpenAI
 
 def normalize_url(url):
@@ -83,39 +82,35 @@ def generate_campaign_data(prompt, api_key, model, temperature):
     Return JSON only matching the schema.
     """
     
-    try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
-            ],
-            response_format={
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "campaign_parameters",
-                    "strict": True,
-                    "schema": {
-                        "type": "object",
-                        "properties": {
-                            "website_url": {"type": "string"},
-                            "campaign_source": {"type": "string"},
-                            "campaign_medium": {"type": "string"},
-                            "campaign_name": {"type": ["string", "null"]},
-                            "campaign_id": {"type": ["string", "null"]},
-                            "campaign_term": {"type": ["string", "null"]},
-                            "campaign_content": {"type": ["string", "null"]}
-                        },
-                        "required": ["website_url", "campaign_source", "campaign_medium", "campaign_name", "campaign_id", "campaign_term", "campaign_content"],
-                        "additionalProperties": False
-                    }
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt}
+        ],
+        response_format={
+            "type": "json_schema",
+            "json_schema": {
+                "name": "campaign_parameters",
+                "strict": True,
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "website_url": {"type": "string"},
+                        "campaign_source": {"type": "string"},
+                        "campaign_medium": {"type": "string"},
+                        "campaign_name": {"type": ["string", "null"]},
+                        "campaign_id": {"type": ["string", "null"]},
+                        "campaign_term": {"type": ["string", "null"]},
+                        "campaign_content": {"type": ["string", "null"]}
+                    },
+                    "required": ["website_url", "campaign_source", "campaign_medium", "campaign_name", "campaign_id", "campaign_term", "campaign_content"],
+                    "additionalProperties": False
                 }
-            },
-            temperature=temperature
-        )
-        
-        content = response.choices[0].message.content
-        return json.loads(content)
-    except Exception as e:
-        st.error(f"Error calling OpenAI: {e}")
-        return None
+            }
+        },
+        temperature=temperature
+    )
+    
+    content = response.choices[0].message.content
+    return json.loads(content)
