@@ -1,6 +1,17 @@
 import urllib.parse
 import json
 from openai import OpenAI
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class CampaignData(BaseModel):
+    website_url: str
+    campaign_source: str
+    campaign_medium: str
+    campaign_name: Optional[str] = None
+    campaign_id: Optional[str] = None
+    campaign_term: Optional[str] = None
+    campaign_content: Optional[str] = None
 
 def normalize_url(url):
     """Ensures URL has a scheme."""
@@ -113,4 +124,4 @@ def generate_campaign_data(prompt, api_key, model, temperature):
     )
     
     content = response.choices[0].message.content
-    return json.loads(content)
+    return CampaignData.model_validate_json(content).model_dump()

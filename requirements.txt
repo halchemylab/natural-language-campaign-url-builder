@@ -3,3 +3,5 @@ openai
 python-dotenv
 qrcode[pil]
 pyshorteners
+pydantic
+tenacity
