@@ -53,6 +53,10 @@ def init_session_state():
     # Metrics
     if 'usage_count' not in st.session_state:
         st.session_state.usage_count = 0
+
+    # History
+    if 'history' not in st.session_state:
+        st.session_state.history = []
     
     # Check for query params to preload state
     # This enables sharing URLs with pre-filled forms
@@ -98,6 +102,19 @@ with st.sidebar:
     
     st.button("Reset metrics", on_click=reset_metrics)
     
+    st.divider()
+
+    st.header("History")
+    if st.session_state.history:
+        # Show newest first
+        for i, item in enumerate(reversed(st.session_state.history)):
+            label = item.get('name', 'Untitled')
+            url = item.get('url', '')
+            with st.expander(f"{label}"):
+                st.code(url, language="text")
+    else:
+        st.caption("No history yet.")
+
     st.divider()
     
     st.header("Configuration")
@@ -208,6 +225,15 @@ st.subheader("Generated URL")
 if final_url:
     st.code(final_url, language="text")
     st.caption("Click the copy icon in the top right of the code box above.")
+
+    if st.button("Save to History"):
+        # Create a friendly label
+        h_label = st.session_state.campaign_name or st.session_state.campaign_source or "Untitled Campaign"
+        st.session_state.history.append({
+            "name": h_label,
+            "url": final_url
+        })
+        st.success(f"Saved '{h_label}' to history!")
     
     # QR Code Generation
     with st.expander("Show QR Code"):
