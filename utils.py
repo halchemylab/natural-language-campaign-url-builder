@@ -3,6 +3,7 @@ import json
 from openai import OpenAI
 from pydantic import BaseModel, Field
 from typing import Optional
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 class CampaignData(BaseModel):
     website_url: str
@@ -73,6 +74,7 @@ def build_campaign_url(base_url, source, medium, campaign_name, campaign_id, ter
     
     return final_url
 
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def generate_campaign_data(prompt, api_key, model, temperature):
     """Calls OpenAI to parse the natural language prompt."""
     client = OpenAI(api_key=api_key)
