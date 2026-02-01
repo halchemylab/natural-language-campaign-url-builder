@@ -5,6 +5,20 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+# Constants for ROI calculations
+TIME_SAVED_PER_RUN_MIN = 3
+MONEY_SAVED_PER_RUN_USD = 3
+
+def calculate_roi(usage_count):
+    """
+    Calculates time and money saved based on usage count.
+    Returns a tuple (time_saved_min, money_saved_usd).
+    """
+    return (
+        usage_count * TIME_SAVED_PER_RUN_MIN,
+        usage_count * MONEY_SAVED_PER_RUN_USD
+    )
+
 class CampaignData(BaseModel):
     website_url: str
     campaign_source: str

@@ -4,7 +4,7 @@ import qrcode
 import io
 import pyshorteners
 from dotenv import load_dotenv
-from utils import normalize_url, build_campaign_url, generate_campaign_data
+from utils import normalize_url, build_campaign_url, generate_campaign_data, calculate_roi
 
 # Load environment variables if available
 load_dotenv()
@@ -16,10 +16,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
-# Constants for ROI calculations
-TIME_SAVED_PER_RUN_MIN = 3
-MONEY_SAVED_PER_RUN_USD = 3
 
 # --- Helper Functions ---
 
@@ -100,8 +96,7 @@ with st.sidebar:
     with m_col2:
         pass # Spacer
         
-    t_saved = st.session_state.usage_count * TIME_SAVED_PER_RUN_MIN
-    m_saved = st.session_state.usage_count * MONEY_SAVED_PER_RUN_USD
+    t_saved, m_saved = calculate_roi(st.session_state.usage_count)
     
     st.metric("Time Saved", f"{t_saved} min")
     st.metric("Money Saved", f"${m_saved}")
