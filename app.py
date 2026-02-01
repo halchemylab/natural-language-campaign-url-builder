@@ -135,6 +135,17 @@ with st.sidebar:
     
     if api_key:
         st.success("API key loaded ✅")
+        
+        # Helper to save key locally (Low friction improvement)
+        # Check if key is NOT already in environment to avoid redundancy
+        if not os.getenv("OPENAI_API_KEY") and api_key_input:
+            if st.button("Save to .env (Local Only)"):
+                try:
+                    with open(".env", "a") as f:
+                        f.write(f"\nOPENAI_API_KEY={api_key_input}")
+                    st.toast("Saved to .env! It will auto-load next time.")
+                except Exception as e:
+                    st.error(f"Could not save .env: {e}")
     else:
         st.error("API key missing ❌")
 
