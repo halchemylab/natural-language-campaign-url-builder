@@ -4,6 +4,7 @@ import qrcode
 import io
 import pyshorteners
 from dotenv import load_dotenv
+from pydantic import ValidationError
 from utils import normalize_url, build_campaign_url, generate_campaign_data, calculate_roi
 
 # Load environment variables if available
@@ -196,6 +197,10 @@ with st.container():
                     
                     st.session_state.usage_count += 1
                     st.rerun()
+            except ValidationError as ve:
+                st.error("The AI returned an invalid response format. Please try again with a different description.")
+                with st.expander("Debug Info"):
+                    st.write(ve)
             except Exception as e:
                 st.error(f"Error calling OpenAI: {e}")
 
