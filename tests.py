@@ -1,5 +1,6 @@
 import unittest
-from utils import normalize_url, build_campaign_url
+from unittest.mock import patch, MagicMock
+from utils import normalize_url, build_campaign_url, generate_campaign_data
 
 class TestUtils(unittest.TestCase):
 
@@ -48,6 +49,56 @@ class TestUtils(unittest.TestCase):
         self.assertIn("utm_id=id123", result)
         self.assertIn("utm_term=term_here", result)
         self.assertIn("utm_content=content_here", result)
+
+    @patch('utils.OpenAI')
+    def test_generate_campaign_data_success(self, mock_openai_cls):
+        # Mock the client instance and its method chain
+        mock_client = mock_openai_cls.return_value
+        mock_completion = MagicMock()
+        mock_client.chat.completions.create.return_value = mock_completion
+        
+        # Mock the response content
+        fake_response_content = """
+        {
+            "website_url": "https://example.com/promo",
+            "campaign_source": "insta",
+            "campaign_medium": "social",
+            "campaign_name": "winter_sale",
+            "campaign_id": null,
+            "campaign_term": null,
+            "campaign_content": null
+        }
+        """
+        mock_completion.choices[0].message.content = fake_response_content
+        
+        # Call the function
+        result = generate_campaign_data("test prompt", "fake_key", "gpt-4o-mini", 0.2)
+        
+        # Assertions
+        self.assertEqual(result['website_url'], "https://example.com/promo")
+        self.assertEqual(result['campaign_source'], "insta")
+        self.assertEqual(result['campaign_medium'], "social")
+        self.assertEqual(result['campaign_name'], "winter_sale")
+        
+    @patch('utils.OpenAI')
+    def test_generate_campaign_data_validation_error(self, mock_openai_cls):
+        # Test malformed JSON/schema violation handling
+        mock_client = mock_openai_cls.return_value
+        mock_completion = MagicMock()
+        mock_client.chat.completions.create.return_value = mock_completion
+        
+        # Missing required field 'campaign_source'
+        bad_response = """
+        {
+            "website_url": "https://example.com",
+            "campaign_medium": "email"
+        }
+        """
+        mock_completion.choices[0].message.content = bad_response
+        
+        # Should raise ValidationError (propagated from Pydantic)
+        with self.assertRaises(Exception): # Using generic Exception as we didn't import ValidationError here, but Pydantic raises it
+            generate_campaign_data("test prompt", "fake_key", "gpt-4o-mini", 0.2)
 
 if __name__ == "__main__":
     unittest.main()
