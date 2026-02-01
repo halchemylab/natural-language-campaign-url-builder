@@ -1,7 +1,7 @@
-streamlit
-openai
-python-dotenv
+streamlit==1.47.0
+openai==1.97.0
+python-dotenv==1.1.1
 qrcode[pil]
 pyshorteners
-pydantic
-tenacity
+pydantic==2.11.7
+tenacity==9.1.2
