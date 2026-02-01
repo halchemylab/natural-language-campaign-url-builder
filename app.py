@@ -80,6 +80,12 @@ def init_session_state():
 def reset_metrics():
     st.session_state.usage_count = 0
 
+def clear_form_data():
+    keys = ['website_url', 'campaign_source', 'campaign_medium', 
+            'campaign_name', 'campaign_id', 'campaign_term', 'campaign_content']
+    for k in keys:
+        st.session_state[k] = ''
+
 # --- Main Application ---
 
 init_session_state()
@@ -190,7 +196,11 @@ with st.container():
 st.divider()
 
 # Container for Form Fields
-st.subheader("Campaign Parameters")
+c_p_col1, c_p_col2 = st.columns([3, 1])
+with c_p_col1:
+    st.subheader("Campaign Parameters")
+with c_p_col2:
+    st.button("Clear Form", on_click=clear_form_data, type="secondary")
 
 col1, col2 = st.columns(2)
 
