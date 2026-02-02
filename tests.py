@@ -1,8 +1,32 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from utils import normalize_url, build_campaign_url, generate_campaign_data
+from utils import normalize_url, build_campaign_url, generate_campaign_data, validate_url_reachability
 
 class TestUtils(unittest.TestCase):
+
+    @patch('utils.requests.head')
+    def test_validate_url_reachability_success(self, mock_head):
+        mock_head.return_value.status_code = 200
+        self.assertTrue(validate_url_reachability("https://example.com"))
+
+    @patch('utils.requests.head')
+    def test_validate_url_reachability_failure(self, mock_head):
+        mock_head.return_value.status_code = 404
+        self.assertFalse(validate_url_reachability("https://example.com/broken"))
+        
+    @patch('utils.requests.head')
+    def test_validate_url_reachability_exception(self, mock_head):
+        mock_head.side_effect = Exception("Connection error")
+        self.assertFalse(validate_url_reachability("https://example.com/error"))
+
+    @patch('utils.requests.head')
+    @patch('utils.requests.get')
+    def test_validate_url_reachability_fallback(self, mock_get, mock_head):
+        # Simulate 405 on HEAD, then 200 on GET
+        mock_head.return_value.status_code = 405
+        mock_get.return_value.status_code = 200
+        self.assertTrue(validate_url_reachability("https://example.com/protected"))
+        mock_get.assert_called_once()
 
     def test_normalize_url(self):
         # Case: Already has https

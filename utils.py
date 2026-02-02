@@ -1,5 +1,6 @@
 import urllib.parse
 import json
+import requests
 from openai import OpenAI
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -36,6 +37,28 @@ def normalize_url(url):
     if not url.startswith(('http://', 'https://')):
         return f'https://{url}'
     return url
+
+def validate_url_reachability(url):
+    """
+    Checks if the URL is reachable (returns 200-399 status code).
+    Uses a short timeout and handles common issues.
+    """
+    if not url:
+        return False
+    
+    try:
+        # User-Agent to avoid blocking by some servers
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        # Try HEAD first for efficiency
+        response = requests.head(url, headers=headers, timeout=3, allow_redirects=True)
+        
+        # If HEAD not allowed, try GET (stream=True to avoid downloading body)
+        if response.status_code == 405:
+             response = requests.get(url, headers=headers, timeout=3, stream=True)
+
+        return 200 <= response.status_code < 400
+    except Exception:
+        return False
 
 def build_campaign_url(base_url, source, medium, campaign_name, campaign_id, term, content):
     """

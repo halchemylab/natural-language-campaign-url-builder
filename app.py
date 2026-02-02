@@ -5,7 +5,7 @@ import io
 import pyshorteners
 from dotenv import load_dotenv
 from pydantic import ValidationError
-from utils import normalize_url, build_campaign_url, generate_campaign_data, calculate_roi
+from utils import normalize_url, build_campaign_url, generate_campaign_data, calculate_roi, validate_url_reachability
 
 # Load environment variables if available
 load_dotenv()
@@ -246,6 +246,15 @@ st.subheader("Generated URL")
 if final_url:
     st.code(final_url, language="text")
     st.caption("Click the copy icon in the top right of the code box above.")
+
+    # Validate URL Reachability
+    with st.spinner("Validating link..."):
+        is_valid = validate_url_reachability(final_url)
+    
+    if is_valid:
+        st.success("✅ Link is reachable")
+    else:
+        st.warning("⚠️ Link might be unreachable or broken")
 
     if st.button("Save to History"):
         # Create a friendly label

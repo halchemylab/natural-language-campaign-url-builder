@@ -5,3 +5,4 @@ qrcode[pil]
 pyshorteners
 pydantic==2.11.7
 tenacity==9.1.2
+requests
