@@ -42,6 +42,21 @@ def generate_qr_code_image(url: str) -> bytes:
     img.save(img_byte_arr, format='PNG')
     return img_byte_arr.getvalue()
 
+def validate_api_key(api_key: str) -> bool:
+    """
+    Validates the OpenAI API key by making a lightweight API call.
+    Returns True if valid, False otherwise.
+    """
+    if not api_key:
+        return False
+    try:
+        client = OpenAI(api_key=api_key)
+        # listing models is a lightweight call to check auth
+        client.models.list(limit=1)
+        return True
+    except Exception:
+        return False
+
 def load_history_from_csv(file_path: str) -> List[Dict[str, str]]:
     """Loads history from a CSV file."""
     if not os.path.exists(file_path):

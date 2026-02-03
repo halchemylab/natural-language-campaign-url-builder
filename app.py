@@ -3,7 +3,7 @@ import os
 import pyshorteners
 from dotenv import load_dotenv
 from pydantic import ValidationError
-from utils import normalize_url, build_campaign_url, generate_campaign_data, calculate_roi, validate_url_reachability, generate_qr_code_image, load_history_from_csv, save_history_item_to_csv
+from utils import normalize_url, build_campaign_url, generate_campaign_data, calculate_roi, validate_url_reachability, generate_qr_code_image, load_history_from_csv, save_history_item_to_csv, validate_api_key
 
 # Load environment variables if available
 load_dotenv()
@@ -135,6 +135,13 @@ with st.sidebar:
     api_key = api_key_input
     
     if api_key:
+        if st.button("Validate Key"):
+            with st.spinner("Checking API Key..."):
+                if validate_api_key(api_key):
+                    st.success("API Key is valid! ✅")
+                else:
+                    st.error("Invalid API Key ❌")
+
         st.success("API key loaded ✅")
         
         # Helper to save key locally (Low friction improvement)
