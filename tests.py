@@ -1,23 +1,23 @@
-import unittest
+import pytest
 from unittest.mock import patch, MagicMock
 from utils import normalize_url, build_campaign_url, generate_campaign_data, validate_url_reachability
 
-class TestUtils(unittest.TestCase):
+class TestUtils:
 
     @patch('utils.requests.head')
     def test_validate_url_reachability_success(self, mock_head):
         mock_head.return_value.status_code = 200
-        self.assertTrue(validate_url_reachability("https://example.com"))
+        assert validate_url_reachability("https://example.com") is True
 
     @patch('utils.requests.head')
     def test_validate_url_reachability_failure(self, mock_head):
         mock_head.return_value.status_code = 404
-        self.assertFalse(validate_url_reachability("https://example.com/broken"))
+        assert validate_url_reachability("https://example.com/broken") is False
         
     @patch('utils.requests.head')
     def test_validate_url_reachability_exception(self, mock_head):
         mock_head.side_effect = Exception("Connection error")
-        self.assertFalse(validate_url_reachability("https://example.com/error"))
+        assert validate_url_reachability("https://example.com/error") is False
 
     @patch('utils.requests.head')
     @patch('utils.requests.get')
@@ -25,54 +25,54 @@ class TestUtils(unittest.TestCase):
         # Simulate 405 on HEAD, then 200 on GET
         mock_head.return_value.status_code = 405
         mock_get.return_value.status_code = 200
-        self.assertTrue(validate_url_reachability("https://example.com/protected"))
+        assert validate_url_reachability("https://example.com/protected") is True
         mock_get.assert_called_once()
 
     def test_normalize_url(self):
         # Case: Already has https
-        self.assertEqual(normalize_url("https://example.com"), "https://example.com")
+        assert normalize_url("https://example.com") == "https://example.com"
         # Case: Already has http
-        self.assertEqual(normalize_url("http://example.com"), "http://example.com")
+        assert normalize_url("http://example.com") == "http://example.com"
         # Case: Missing scheme
-        self.assertEqual(normalize_url("example.com"), "https://example.com")
+        assert normalize_url("example.com") == "https://example.com"
         # Case: Missing scheme with path
-        self.assertEqual(normalize_url("example.com/path"), "https://example.com/path")
+        assert normalize_url("example.com/path") == "https://example.com/path"
         # Case: Empty string
-        self.assertEqual(normalize_url(""), "")
+        assert normalize_url("") == ""
         # Case: Whitespace
-        self.assertEqual(normalize_url("  example.com  "), "https://example.com")
+        assert normalize_url("  example.com  ") == "https://example.com"
 
     def test_build_campaign_url_basic(self):
         base = "https://example.com"
         result = build_campaign_url(base, "google", "cpc", "spring_sale", None, None, None)
-        self.assertIn("utm_source=google", result)
-        self.assertIn("utm_medium=cpc", result)
-        self.assertIn("utm_campaign=spring_sale", result)
+        assert "utm_source=google" in result
+        assert "utm_medium=cpc" in result
+        assert "utm_campaign=spring_sale" in result
 
     def test_build_campaign_url_with_existing_params(self):
         base = "https://example.com?existing=param"
         result = build_campaign_url(base, "google", "cpc", "spring_sale", None, None, None)
-        self.assertIn("existing=param", result)
-        self.assertIn("utm_source=google", result)
+        assert "existing=param" in result
+        assert "utm_source=google" in result
 
     def test_build_campaign_url_overwrite_params(self):
         base = "https://example.com?utm_source=old_source"
         result = build_campaign_url(base, "new_source", "cpc", "spring_sale", None, None, None)
-        self.assertIn("utm_source=new_source", result)
-        self.assertNotIn("utm_source=old_source", result)
+        assert "utm_source=new_source" in result
+        assert "utm_source=old_source" not in result
 
     def test_build_campaign_url_all_params(self):
         base = "example.com" # Should be normalized
         result = build_campaign_url(
             base, "src", "med", "name", "id123", "term_here", "content_here"
         )
-        self.assertTrue(result.startswith("https://example.com"))
-        self.assertIn("utm_source=src", result)
-        self.assertIn("utm_medium=med", result)
-        self.assertIn("utm_campaign=name", result)
-        self.assertIn("utm_id=id123", result)
-        self.assertIn("utm_term=term_here", result)
-        self.assertIn("utm_content=content_here", result)
+        assert result.startswith("https://example.com")
+        assert "utm_source=src" in result
+        assert "utm_medium=med" in result
+        assert "utm_campaign=name" in result
+        assert "utm_id=id123" in result
+        assert "utm_term=term_here" in result
+        assert "utm_content=content_here" in result
 
     @patch('utils.OpenAI')
     def test_generate_campaign_data_success(self, mock_openai_cls):
@@ -99,10 +99,10 @@ class TestUtils(unittest.TestCase):
         result = generate_campaign_data("test prompt", "fake_key", "gpt-4o-mini", 0.2)
         
         # Assertions
-        self.assertEqual(result['website_url'], "https://example.com/promo")
-        self.assertEqual(result['campaign_source'], "insta")
-        self.assertEqual(result['campaign_medium'], "social")
-        self.assertEqual(result['campaign_name'], "winter_sale")
+        assert result['website_url'] == "https://example.com/promo"
+        assert result['campaign_source'] == "insta"
+        assert result['campaign_medium'] == "social"
+        assert result['campaign_name'] == "winter_sale"
         
     @patch('utils.OpenAI')
     def test_generate_campaign_data_validation_error(self, mock_openai_cls):
@@ -120,9 +120,6 @@ class TestUtils(unittest.TestCase):
         """
         mock_completion.choices[0].message.content = bad_response
         
-        # Should raise ValidationError (propagated from Pydantic)
-        with self.assertRaises(Exception): # Using generic Exception as we didn't import ValidationError here, but Pydantic raises it
+        # Should raise exception
+        with pytest.raises(Exception): 
             generate_campaign_data("test prompt", "fake_key", "gpt-4o-mini", 0.2)
-
-if __name__ == "__main__":
-    unittest.main()
