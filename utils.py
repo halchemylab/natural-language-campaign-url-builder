@@ -5,14 +5,14 @@ import qrcode
 import io
 from openai import OpenAI
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Tuple, Dict, Any
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 # Constants for ROI calculations
 TIME_SAVED_PER_RUN_MIN = 3
 MONEY_SAVED_PER_RUN_USD = 3
 
-def calculate_roi(usage_count):
+def calculate_roi(usage_count: int) -> Tuple[int, int]:
     """
     Calculates time and money saved based on usage count.
     Returns a tuple (time_saved_min, money_saved_usd).
@@ -22,7 +22,7 @@ def calculate_roi(usage_count):
         usage_count * MONEY_SAVED_PER_RUN_USD
     )
 
-def generate_qr_code_image(url):
+def generate_qr_code_image(url: str) -> bytes:
     """
     Generates a QR code for the given URL and returns it as bytes.
     """
@@ -49,7 +49,7 @@ class CampaignData(BaseModel):
     campaign_term: Optional[str] = None
     campaign_content: Optional[str] = None
 
-def normalize_url(url):
+def normalize_url(url: str) -> str:
     """Ensures URL has a scheme."""
     if not url:
         return ""
@@ -58,7 +58,7 @@ def normalize_url(url):
         return f'https://{url}'
     return url
 
-def validate_url_reachability(url):
+def validate_url_reachability(url: str) -> bool:
     """
     Checks if the URL is reachable (returns 200-399 status code).
     Uses a short timeout and handles common issues.
@@ -80,7 +80,15 @@ def validate_url_reachability(url):
     except Exception:
         return False
 
-def build_campaign_url(base_url, source, medium, campaign_name, campaign_id, term, content):
+def build_campaign_url(
+    base_url: str,
+    source: str,
+    medium: str,
+    campaign_name: Optional[str],
+    campaign_id: Optional[str],
+    term: Optional[str],
+    content: Optional[str]
+) -> str:
     """
     Constructs the final URL.
     - Preserves existing query params in base_url.
@@ -132,7 +140,12 @@ def build_campaign_url(base_url, source, medium, campaign_name, campaign_id, ter
     return final_url
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
-def generate_campaign_data(prompt, api_key, model, temperature):
+def generate_campaign_data(
+    prompt: str,
+    api_key: str,
+    model: str,
+    temperature: float
+) -> Dict[str, Any]:
     """Calls OpenAI to parse the natural language prompt."""
     client = OpenAI(api_key=api_key)
     
