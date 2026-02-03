@@ -1,6 +1,8 @@
 import urllib.parse
 import json
 import requests
+import qrcode
+import io
 from openai import OpenAI
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -19,6 +21,24 @@ def calculate_roi(usage_count):
         usage_count * TIME_SAVED_PER_RUN_MIN,
         usage_count * MONEY_SAVED_PER_RUN_USD
     )
+
+def generate_qr_code_image(url):
+    """
+    Generates a QR code for the given URL and returns it as bytes.
+    """
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format='PNG')
+    return img_byte_arr.getvalue()
 
 class CampaignData(BaseModel):
     website_url: str
