@@ -3,9 +3,11 @@ import json
 import requests
 import qrcode
 import io
+import csv
+import os
 from openai import OpenAI
 from pydantic import BaseModel, Field
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional, Tuple, Dict, Any, List
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 # Constants for ROI calculations
@@ -39,6 +41,35 @@ def generate_qr_code_image(url: str) -> bytes:
     img_byte_arr = io.BytesIO()
     img.save(img_byte_arr, format='PNG')
     return img_byte_arr.getvalue()
+
+def load_history_from_csv(file_path: str) -> List[Dict[str, str]]:
+    """Loads history from a CSV file."""
+    if not os.path.exists(file_path):
+        return []
+    
+    history = []
+    try:
+        with open(file_path, mode='r', newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                history.append(row)
+    except Exception:
+        return []
+    return history
+
+def save_history_item_to_csv(file_path: str, item: Dict[str, str]) -> None:
+    """Appends a history item to the CSV file."""
+    fieldnames = ['name', 'url']
+    file_exists = os.path.exists(file_path)
+    
+    try:
+        with open(file_path, mode='a', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            if not file_exists:
+                writer.writeheader()
+            writer.writerow(item)
+    except Exception:
+        pass
 
 class CampaignData(BaseModel):
     website_url: str

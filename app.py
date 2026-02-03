@@ -3,10 +3,12 @@ import os
 import pyshorteners
 from dotenv import load_dotenv
 from pydantic import ValidationError
-from utils import normalize_url, build_campaign_url, generate_campaign_data, calculate_roi, validate_url_reachability, generate_qr_code_image
+from utils import normalize_url, build_campaign_url, generate_campaign_data, calculate_roi, validate_url_reachability, generate_qr_code_image, load_history_from_csv, save_history_item_to_csv
 
 # Load environment variables if available
 load_dotenv()
+
+HISTORY_FILE = "history.csv"
 
 # --- Configuration & Setup ---
 st.set_page_config(
@@ -51,7 +53,7 @@ def init_session_state():
 
     # History
     if 'history' not in st.session_state:
-        st.session_state.history = []
+        st.session_state.history = load_history_from_csv(HISTORY_FILE)
     
     # Check for query params to preload state
     # This enables sharing URLs with pre-filled forms
@@ -257,10 +259,12 @@ if final_url:
     if st.button("Save to History"):
         # Create a friendly label
         h_label = st.session_state.campaign_name or st.session_state.campaign_source or "Untitled Campaign"
-        st.session_state.history.append({
+        new_item = {
             "name": h_label,
             "url": final_url
-        })
+        }
+        st.session_state.history.append(new_item)
+        save_history_item_to_csv(HISTORY_FILE, new_item)
         st.success(f"Saved '{h_label}' to history!")
     
     # QR Code Generation
