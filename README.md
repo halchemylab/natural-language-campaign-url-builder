@@ -46,8 +46,77 @@ streamlit run app.py
 - **Model**: Select between `gpt-4o-mini` (default, faster/cheaper) or other available models.
 - **Temperature**: Adjust creativity (lower is more deterministic).
 
+## Features in Action
+
+### Screenshot
+![Natural Language Campaign URL Builder](./screenshot.png)
+*The application interface showing campaign description input, parameter generation, and URL output.*
+
 ## ROI Metrics
 
 The sidebar tracks your session usage:
 - **Time Saved**: estimated at 3 minutes per manual URL creation avoided.
 - **Money Saved**: estimated at $3.00 operational cost per URL.
+
+## Advanced Features
+
+### URL Shortening
+- Generate shortened TinyURLs for your campaign URLs with a single click.
+- Useful for sharing in limited-character environments (Twitter, SMS, etc.).
+
+### QR Code Generation
+- Automatically generate QR codes for campaign URLs.
+- Download QR codes as PNG files for print or digital use.
+
+### Campaign History
+- Previous campaigns are automatically saved and displayed in the sidebar.
+- Click any campaign to view its full URL.
+- Data persists in `history.csv`.
+
+### URL Validation
+- The app validates that your destination URL is reachable.
+- Provides warnings if the link might be broken or unreachable.
+
+### Shareable App URLs
+- The app state updates the browser URL as you work.
+- You can copy the browser URL and share it with others—they'll see the same campaign configuration when they open it.
+
+## Testing
+
+Run the test suite:
+```bash
+pytest tests.py
+```
+
+Tests cover:
+- URL normalization and building
+- URL reachability validation
+- Campaign data parsing from natural language
+- Edge cases and error handling
+
+## Architecture
+
+- **app.py**: Main Streamlit UI and orchestration.
+- **utils.py**: Utility functions for URL building, API calls, QR code generation, and data persistence.
+- **tests.py**: Unit tests for core functions.
+- **requirements.txt**: Python dependencies.
+
+## Error Handling
+
+The application gracefully handles:
+- Invalid OpenAI API keys
+- Malformed JSON responses from AI
+- Unreachable destination URLs
+- URL shortening failures
+- Network timeouts
+
+## Future Enhancements
+
+- Multi-source campaign builders (Google Ads, Facebook, LinkedIn parameters)
+- Batch URL generation from CSV
+- Analytics integration (GA4 real-time tracking)
+- Campaign templates library
+
+## License
+
+MIT License - Feel free to use and modify as needed.
