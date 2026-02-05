@@ -185,6 +185,31 @@ def build_campaign_url(
     
     return final_url
 
+def lint_utm_parameter(value: Optional[str]) -> List[str]:
+    """
+    Checks a UTM parameter value against common best practices.
+    Returns a list of warning messages.
+    """
+    if not value:
+        return []
+    
+    warnings = []
+    
+    # 1. Check for uppercase
+    if any(char.isupper() for char in value):
+        warnings.append("Contains uppercase letters (lowercase is preferred for consistency)")
+    
+    # 2. Check for spaces
+    if ' ' in value:
+        warnings.append("Contains spaces (use underscores or hyphens instead)")
+    
+    # 3. Check for special characters (other than - or _)
+    import re
+    if re.search(r'[^a-zA-Z0-9\-_]', value):
+        warnings.append("Contains special characters (stick to alphanumeric, -, and _)")
+        
+    return warnings
+
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def generate_campaign_data(
     prompt: str,

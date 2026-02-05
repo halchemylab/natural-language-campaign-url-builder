@@ -1,8 +1,30 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from utils import normalize_url, build_campaign_url, generate_campaign_data, validate_url_reachability
+from utils import normalize_url, build_campaign_url, generate_campaign_data, validate_url_reachability, lint_utm_parameter
 
 class TestUtils:
+
+    def test_lint_utm_parameter(self):
+        # Case: Clean parameter
+        assert lint_utm_parameter("google") == []
+        assert lint_utm_parameter("spring_sale") == []
+        assert lint_utm_parameter("summer-2024") == []
+        
+        # Case: Uppercase
+        warnings = lint_utm_parameter("Google")
+        assert any("uppercase" in w for w in warnings)
+        
+        # Case: Spaces
+        warnings = lint_utm_parameter("spring sale")
+        assert any("spaces" in w for w in warnings)
+        
+        # Case: Special characters
+        warnings = lint_utm_parameter("sale!")
+        assert any("special characters" in w for w in warnings)
+        
+        # Case: Multiple issues
+        warnings = lint_utm_parameter("Spring Sale!")
+        assert len(warnings) == 3
 
     @patch('utils.requests.head')
     def test_validate_url_reachability_success(self, mock_head):

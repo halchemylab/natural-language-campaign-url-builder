@@ -3,7 +3,18 @@ import os
 import pyshorteners
 from dotenv import load_dotenv
 from pydantic import ValidationError
-from utils import normalize_url, build_campaign_url, generate_campaign_data, calculate_roi, validate_url_reachability, generate_qr_code_image, load_history_from_csv, save_history_item_to_csv, validate_api_key
+from utils import (
+    normalize_url, 
+    build_campaign_url, 
+    generate_campaign_data, 
+    calculate_roi, 
+    validate_url_reachability, 
+    generate_qr_code_image, 
+    load_history_from_csv, 
+    save_history_item_to_csv, 
+    validate_api_key,
+    lint_utm_parameter
+)
 
 # Load environment variables if available
 load_dotenv()
@@ -224,14 +235,31 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.text_input("Website URL *", key="website_url", help="The destination URL (e.g. https://example.com)")
+    
     st.text_input("Campaign Source *", key="campaign_source", help="The referrer: (e.g. google, newsletter)")
+    for warning in lint_utm_parameter(st.session_state.campaign_source):
+        st.caption(f"⚠️ {warning}")
+        
     st.text_input("Campaign Medium *", key="campaign_medium", help="Marketing medium: (e.g. cpc, banner, email)")
+    for warning in lint_utm_parameter(st.session_state.campaign_medium):
+        st.caption(f"⚠️ {warning}")
 
 with col2:
     st.text_input("Campaign Name *", key="campaign_name", help="Product, promo code, or slogan (e.g. spring_sale)")
+    for warning in lint_utm_parameter(st.session_state.campaign_name):
+        st.caption(f"⚠️ {warning}")
+        
     st.text_input("Campaign ID", key="campaign_id", help="The ads campaign id.")
+    for warning in lint_utm_parameter(st.session_state.campaign_id):
+        st.caption(f"⚠️ {warning}")
+        
     st.text_input("Campaign Term", key="campaign_term", help="Identify the paid keywords")
+    for warning in lint_utm_parameter(st.session_state.campaign_term):
+        st.caption(f"⚠️ {warning}")
+        
     st.text_input("Campaign Content", key="campaign_content", help="Use to differentiate ads")
+    for warning in lint_utm_parameter(st.session_state.campaign_content):
+        st.caption(f"⚠️ {warning}")
 
 # Validation warning for Name/ID
 if not st.session_state.campaign_name and not st.session_state.campaign_id:
