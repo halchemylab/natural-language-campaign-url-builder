@@ -45,8 +45,12 @@ def get_api_key():
         return st.session_state.api_key_input
     
     # Check Streamlit secrets
-    if hasattr(st, "secrets") and "OPENAI_API_KEY" in st.secrets:
-        return st.secrets["OPENAI_API_KEY"]
+    try:
+        if hasattr(st, "secrets") and "OPENAI_API_KEY" in st.secrets:
+            return st.secrets["OPENAI_API_KEY"]
+    except Exception:
+        # st.secrets raises an error if the file is missing and we try to access it
+        pass
         
     # Check environment variable
     env_key = os.getenv("OPENAI_API_KEY")
@@ -117,19 +121,6 @@ with st.sidebar:
     
     st.divider()
 
-    st.header("History")
-    if st.session_state.history:
-        # Show newest first
-        for i, item in enumerate(reversed(st.session_state.history)):
-            label = item.get('name', 'Untitled')
-            url = item.get('url', '')
-            with st.expander(f"{label}"):
-                st.code(url, language="text")
-    else:
-        st.caption("No history yet.")
-
-    st.divider()
-    
     st.header("Configuration")
     
     # API Key Handling
